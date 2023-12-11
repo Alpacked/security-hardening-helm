@@ -1,0 +1,41 @@
+{{- range $namespaceKey, $namespaceObject := .Values.vaultInit.roles }}
+{{- /*  For all roles defined in each namespace */}}
+{{- range $roleKey, $roleObject := $namespaceObject }}
+---
+{{- /*  Define a Role */}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "{{ $roleKey }}"
+  namespace: "{{ $namespaceKey }}"
+rules:
+{{- /*  Iterate over rules */}}
+{{- range $roleObject }}
+- {{- toYaml . | nindent 2 }}
+{{- end }}
+
+{{- end }}
+{{- end }}
+
+---
+
+{{- if .Values.eso.enabled -}}
+{{- range $namespaceKey, $namespaceObject := .Values.eso.roles }}
+{{- /*  For all roles defined in each namespace */}}
+{{- range $roleKey, $roleObject := $namespaceObject }}
+---
+{{- /*  Define a Role */}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "{{ $roleKey }}"
+  namespace: "{{ $namespaceKey }}"
+rules:
+{{- /*  Iterate over rules */}}
+{{- range $roleObject }}
+- {{- toYaml . | nindent 2 }}
+{{- end }}
+
+{{- end }}
+{{- end }}
+{{- end }}
