@@ -1,0 +1,75 @@
+global:
+  namespace: vault
+
+vault:
+  injector:
+    enabled: false
+  server:
+    ha:
+      enabled: true
+      raft:
+        enabled: true
+
+vaultInit:
+  image:
+    repository: "alpacked/vault"
+    tag: "0.0.1"
+    pullPolicy: Always
+
+  clusterRoles:
+    kubectl-vault-init-role:
+    - apiGroups: [""]
+      resources: ["pods", "pods/exec", "secrets", "serviceaccounts"]
+      verbs: ["create", "get", "list"]
+
+  clusterRoleBindings:
+    kubectl-vault-init-role:
+      serviceAccounts:
+      - vault:vault-init
+
+  roles:
+    kube-system:
+      service-reader-role:
+      - apiGroups: [""]
+        resources: ["services"]
+        verbs: ["get", "list"]
+
+  roleBindings:
+    kube-system:
+      service-reader-role:
+        serviceAccounts:
+        - vault:vault-init
+
+eso:
+  enabled: true
+  saName: "auth-sa-eso"
+  namespace: "external-secrets"
+
+  image:
+    repository: "alpacked/external-secrets"
+    tag: "0.0.1"
+    pullPolicy: Always
+
+  clusterRoles:
+    kubectl-eso-init-role:
+    - apiGroups: [""]
+      resources: ["pods", "pods/exec", "secrets", "serviceaccounts"]
+      verbs: ["create", "get", "list"]
+
+  clusterRoleBindings:
+    kubectl-eso-init-role:
+      serviceAccounts:
+      - external-secrets:auth-sa-eso
+
+  roles:
+    external-secrets:
+      kubectl-eso-patch-role:
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["patch"]
+
+  roleBindings:
+    external-secrets:
+      kubectl-eso-patch-role:
+        serviceAccounts:
+        - external-secrets:auth-sa-eso

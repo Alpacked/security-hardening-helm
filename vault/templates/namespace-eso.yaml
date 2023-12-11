@@ -1,0 +1,8 @@
+{{- if .Values.eso.enabled -}}
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: {{ .Values.eso.namespace }}
+  labels:
+    chart: external-secrets
+{{- end }}
