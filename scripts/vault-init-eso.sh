@@ -1,25 +1,18 @@
 #!/bin/sh
 
 enable_eso() {
-    local eso_service_account_namespace
-    local eso_service_account_name
     local eso_pod_name
-
-    export SA_JWT_TOKEN=$(kubectl -n vault get secret auth-sa-token -o jsonpath="{.data.token}" | base64 --decode; echo)
-    export SA_CA_CRT=$(kubectl -n external-secrets get secret auth-sa-token -o jsonpath="{.data['ca\.crt']}" | base64 --decode; echo)
 
     kubectl exec vault-0 -n vault -- vault auth enable kubernetes
 
     kubectl exec vault-0 -n vault -- vault write auth/kubernetes/config \
-    token_reviewer_jwt="$SA_JWT_TOKEN" \
-    kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
-    kubernetes_ca_cert="$SA_CA_CRT"
+      kubernetes_host=https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT
 
-kubectl exec -i vault-0 -n vault -- sh -c 'cat <<EOF | vault policy write read-only -
-path "kv/*" {
-capabilities = ["read"]
-}
-EOF'
+    kubectl exec -i vault-0 -n vault -- sh -c 'cat <<EOF | vault policy write read-only -
+    path "kv/*" {
+    capabilities = ["read"]
+    }
+    EOF'
 
     kubectl exec vault-0 -n vault -- vault write auth/kubernetes/role/eso-reader \
             bound_service_account_names="auth-sa-eso" \

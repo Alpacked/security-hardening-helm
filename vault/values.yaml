@@ -5,6 +5,8 @@ vault:
   injector:
     enabled: false
   server:
+    serviceAccount:
+      createSecret: true
     ha:
       enabled: true
       raft:
@@ -12,8 +14,8 @@ vault:
 
 vaultInit:
   image:
-    repository: "alpacked/vault"
-    tag: "0.0.1"
+    repository: "alpacked/vault-init-scripts"
+    tag: "0.1.0-rc"
     pullPolicy: Always
 
   clusterRoles:
@@ -46,8 +48,8 @@ eso:
   namespace: "external-secrets"
 
   image:
-    repository: "alpacked/external-secrets"
-    tag: "0.0.1"
+    repository: "alpacked/vault-init-scripts"
+    tag: "0.1.0-rc"
     pullPolicy: Always
 
   clusterRoles:
