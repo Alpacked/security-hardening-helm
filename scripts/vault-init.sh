@@ -8,10 +8,12 @@ LEADER_SECRET_THRESHOLD=3
 LEADER_SECRET_SHARES=5
 
 get_vault_pod_list() {
-  curl -k -X GET \
+  local pod_list=$(curl -s -k -X GET \
       -H "Authorization: Bearer ${SA_TOKEN}" \
       -H "Accept: application/json" \
-      "${API_SERVER}/api/v1/namespaces/${SA_NAMESPACE}/pods?labelSelector=component%3Dserver" | jq -r '.items[].metadata.name'
+      "${API_SERVER}/api/v1/namespaces/${SA_NAMESPACE}/pods?labelSelector=component%3Dserver")
+
+  echo "${pod_list}" | jq -r '.items[].metadata.name'
 }
 
 save_secrets() {
@@ -40,13 +42,12 @@ save_secrets() {
       }'
   )
 
+  echo "Creating vault-init secret..."
   curl -s -k -X POST \
       -H "Authorization: Bearer ${SA_TOKEN}" \
       -H "Content-Type: application/json" \
       --data "${json_payload}" \
       "${API_SERVER}/api/v1/namespaces/${SA_NAMESPACE}/secrets"
-
-  echo "Saving tokens to vault-init-secrets..."
 }
 
 initialize_vault() {
@@ -94,7 +95,7 @@ initialize_raft_vault() {
       sleep 5
   else
       echo "Raft $pod_name is not initialized."
-      exit 1
+      return
   fi
 
   echo "Trying to unseal the raft $pod_name..."
@@ -111,9 +112,11 @@ initialize_raft_vault() {
     echo "Raft $pod_name is unsealed."
   else
       echo "Raft $pod_name is still sealed."
-      exit 1
+      return
   fi
 }
+
+echo "Starting process of initialization Vault..."
 
 vault_pod_list=$(get_vault_pod_list)
 for pod in $vault_pod_list; do
@@ -123,3 +126,5 @@ for pod in $vault_pod_list; do
       initialize_raft_vault $pod
   fi
 done
+
+echo "Done."

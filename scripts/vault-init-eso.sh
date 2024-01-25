@@ -1,43 +1,70 @@
 #!/bin/sh
 
-enable_eso() {
-    local eso_pod_name
+API_SERVER="https://kubernetes.default.svc"
+SA_TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+SA_NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
 
-    kubectl exec vault-0 -n vault -- vault auth enable kubernetes
+get_vault_root_token() {
+  echo "Getting Vault root token from \"vault-init-secrets\" for future requests..."
 
-    kubectl exec vault-0 -n vault -- vault write auth/kubernetes/config \
-      kubernetes_host=https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT
+  local secret_manifest=$(curl -s -k -X GET \
+      -H "Authorization: Bearer ${SA_TOKEN}" \
+      -H "Accept: application/json" \
+      "${API_SERVER}/api/v1/namespaces/${VAULT_NAMESPACE}/secrets/vault-init-secrets")
 
-    kubectl exec -i vault-0 -n vault -- sh -c 'cat <<EOF | vault policy write read-only -
-    path "kv/*" {
-    capabilities = ["read"]
-    }
-    EOF'
-
-    kubectl exec vault-0 -n vault -- vault write auth/kubernetes/role/eso-reader \
-            bound_service_account_names="auth-sa-eso" \
-            bound_service_account_namespaces="external-secrets" \
-            policies="read-only" \
-            ttl=24h
-
-    eso_pod_name=$(kubectl get pods --all-namespaces -l app.kubernetes.io/name=external-secrets -o=jsonpath='{.items[0].metadata.name}')
-    eso_namespace=$(kubectl get pods --all-namespaces -l app.kubernetes.io/name=external-secrets -o=jsonpath='{.items[0].metadata.namespace}')
-
-    kubectl label pods "$eso_pod_name" -n "$eso_namespace" initialize=true --overwrite
-
-    kubectl exec vault-0 -n vault -- vault secrets enable -version=2 kv
-    kubectl exec vault-0 -n vault -- vault kv put kv/test-secret test_user=success
+  VAULT_ROOT_TOKEN=$(echo "${secret_manifest}" | jq -r '.data.root_token' | base64 -d)
 }
 
-if kubectl get pods --all-namespaces -l app.kubernetes.io/name=external-secrets 2>/dev/null | grep -qv 'No resources found'; then
-  if kubectl get pods --all-namespaces -l app.kubernetes.io/name=external-secrets -l initialize=true 2>/dev/null | grep -qv 'No resources found'; then
-    echo "ESO has already been initialized."
-    exit 0
-  else
-    enable_eso
-    exit 0
-  fi
-else
-  echo "ESO does not exist"
-  exit 0
-fi
+enable_k8s_auth() {
+  echo "Enabling K8S auth in Vault..."
+
+  curl -X POST \
+      --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
+      --data "{\"type\": \"kubernetes\"}" \
+      "${VAULT_ADDRESS}/v1/sys/auth/kubernetes"
+
+  curl -X POST \
+     --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
+     --data "{\"kubernetes_host\": \"https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}\"}" \
+     "${VAULT_ADDRESS}/v1/auth/kubernetes/config"
+}
+
+enable_kv2_engine() {
+  echo "Enabling Key-Value engine..."
+
+  curl -X POST \
+      --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
+      --data "{\"type\": \"kv\", \"options\": {\"version\": \"2\"}}" \
+      "${VAULT_ADDRESS}/v1/sys/mounts/kv"
+
+  curl -X POST \
+      --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
+      --data "{\"data\": {\"test_user\": \"success\"}}" \
+      "${VAULT_ADDRESS}/v1/kv/data/test-secret"
+}
+
+write_eso_permissions() {
+  echo "Adding read-only permissions to External Secrets in Vault..."
+
+  curl -X POST \
+      --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
+      --data '{"policy": "path \"kv/data/*\" { capabilities = [\"read\"] }"}' \
+      "${VAULT_ADDRESS}/v1/sys/policies/acl/read-only"
+
+  curl -X POST \
+      --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
+      --data '{
+        "bound_service_account_names": "auth-sa-eso",
+        "bound_service_account_namespaces": "${SA_NAMESPACE}",
+        "policies": "read-only",
+        "ttl": "24h"
+      }' \
+      "${VAULT_ADDRESS}/v1/auth/kubernetes/role/eso-reader"
+}
+
+get_vault_root_token
+enable_k8s_auth
+enable_kv2_engine
+write_eso_permissions
+
+echo "Done."

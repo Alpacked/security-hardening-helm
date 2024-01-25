@@ -16,7 +16,7 @@ vaultInit:
   image:
     repository: "alpacked/vault-init-scripts"
     tag: "0.1.0-rc"
-    pullPolicy: Always
+    imagePullPolicy: Always
 
   clusterRoles:
     kubectl-vault-init-role:
@@ -50,7 +50,7 @@ eso:
   image:
     repository: "alpacked/vault-init-scripts"
     tag: "0.1.0-rc"
-    pullPolicy: Always
+    imagePullPolicy: Always
 
   clusterRoles:
     kubectl-eso-init-role:
