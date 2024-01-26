@@ -1,0 +1,28 @@
+{{- if .Values.eso-init.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Chart.Name }}-eso-test-secret
+  namespace: {{ .Values.eso-init.namespace }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ .Values.eso-init.serviceAccount.name }}
+      containers:
+      - image: "{{ .Values.eso-init.image.repository }}:{{ .Values.eso-init.image.tag }}"
+        imagePullPolicy: {{ .Values.eso-init.image.imagePullPolicy }}
+        name: {{ .Chart.Name }}
+        env:
+        - name: TEST_SECRET_NAME
+          vaule: {{ include "esoTestSecret.name" . }}
+        - name: VAULT_NAMESPACE
+          value: {{ .Release.Namespace }}
+        - name: VAULT_ADDRESS
+          value: "http://vault.{{ .Release.Namespace }}:8200"
+      restartPolicy: OnFailure
+  backoffLimit: 5
+{{- end }}

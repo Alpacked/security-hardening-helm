@@ -36,11 +36,6 @@ enable_kv2_engine() {
       --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
       --data "{\"type\": \"kv\", \"options\": {\"version\": \"2\"}}" \
       "${VAULT_ADDRESS}/v1/sys/mounts/kv"
-
-  curl -X POST \
-      --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
-      --data "{\"data\": {\"test_user\": \"success\"}}" \
-      "${VAULT_ADDRESS}/v1/kv/data/test-secret"
 }
 
 write_eso_permissions() {
