@@ -1,0 +1,16 @@
+{{- if .Values.eso-init.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Chart.Name }}-eso-init-permissions
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+    resourceNames: ["vault-init-secrets"]
+{{- end }}

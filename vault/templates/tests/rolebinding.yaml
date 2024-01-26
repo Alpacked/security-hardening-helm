@@ -1,0 +1,37 @@
+{{- if .Values.eso-init.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: external-secrets-vault-init-secret-access
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.eso-init.serviceAccount.name | quote }}
+    namespace: {{ .Values.eso-init.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: external-secrets-vault-init-secret-access
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: external-secrets-test-secret-access
+  namespace: {{ .Values.eso-init.namespace }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.eso-init.serviceAccount.name | quote }}
+    namespace: {{ .Values.eso-init.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: external-secrets-test-secret-access
+{{- end }}

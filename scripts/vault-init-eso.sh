@@ -49,7 +49,7 @@ write_eso_permissions() {
   curl -X POST \
       --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
       --data '{
-        "bound_service_account_names": "auth-sa-eso",
+        "bound_service_account_names": "auth-eso-init",
         "bound_service_account_namespaces": "${SA_NAMESPACE}",
         "policies": "read-only",
         "ttl": "24h"

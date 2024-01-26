@@ -1,8 +1,8 @@
-{{- if .Values.eso.enabled -}}
+{{- if .Values.eso-init.enabled -}}
 kind: Namespace
 apiVersion: v1
 metadata:
-  name: {{ .Values.eso.namespace }}
+  name: {{ .Values.eso-init.namespace }}
   labels:
     chart: external-secrets
 {{- end }}

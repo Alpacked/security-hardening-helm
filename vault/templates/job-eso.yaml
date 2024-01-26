@@ -1,9 +1,9 @@
-{{- if .Values.eso.enabled -}}
+{{- if .Values.eso-init.enabled -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Chart.Name }}-eso-init
-  namespace: {{ .Values.eso.namespace }}
+  namespace: {{ .Values.eso-init.namespace }}
   annotations:
     "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "1"
@@ -11,10 +11,10 @@ metadata:
 spec:
   template:
     spec:
-      serviceAccountName: {{ .Values.eso.saName }}
+      serviceAccountName: {{ .Values.eso-init.serviceAccount.name }}
       containers:
-      - image: "{{ .Values.eso.image.repository }}:{{ .Values.eso.image.tag }}"
-        imagePullPolicy: {{ .Values.eso.image.imagePullPolicy }}
+      - image: "{{ .Values.eso-init.image.repository }}:{{ .Values.eso-init.image.tag }}"
+        imagePullPolicy: {{ .Values.eso-init.image.imagePullPolicy }}
         name: {{ .Chart.Name }}
         env:
         - name: VAULT_NAMESPACE

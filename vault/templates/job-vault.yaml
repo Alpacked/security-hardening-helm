@@ -12,8 +12,8 @@ spec:
     spec:
       serviceAccountName: vault-init
       containers:
-      - image: "{{ .Values.vaultInit.image.repository }}:{{ .Values.vaultInit.image.tag }}"
-        imagePullPolicy: {{ .Values.vaultInit.image.imagePullPolicy }}
+      - image: "{{ .Values.vault-init.image.repository }}:{{ .Values.vault-init.image.tag }}"
+        imagePullPolicy: {{ .Values.vault-init.image.imagePullPolicy }}
         name: {{ .Chart.Name }}
       restartPolicy: OnFailure
   backoffLimit: 5
