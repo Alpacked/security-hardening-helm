@@ -10,5 +10,5 @@ dependencies:
     version: 0.27.x
   - condition: eso.enabled
     name: external-secrets
-    repository: file://charts/external-secrets-0.9.9.tgz
-    version: 0.9.9
+    repository: https://charts.external-secrets.io
+    version: 0.9.x
