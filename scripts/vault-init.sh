@@ -3,12 +3,11 @@
 API_SERVER="https://kubernetes.default.svc"
 SA_TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
 SA_NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
-LEADER_VAULT_ADDRESS="http://vault-0.vault-internal.${SA_NAMESPACE}:8200"
-LEADER_SECRET_THRESHOLD=3
-LEADER_SECRET_SHARES=5
+SA_CACERT="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)"
 
 get_vault_pod_list() {
-  local pod_list=$(curl -s -k -X GET \
+  local pod_list=$(curl -s -X GET \
+      --cacert ${SA_CACERT} \
       -H "Authorization: Bearer ${SA_TOKEN}" \
       -H "Accept: application/json" \
       "${API_SERVER}/api/v1/namespaces/${SA_NAMESPACE}/pods?labelSelector=component%3Dserver")
@@ -43,7 +42,8 @@ save_secrets() {
   )
 
   echo "Creating vault-init secret..."
-  curl -s -k -X POST \
+  curl -s -X POST \
+      --cacert ${SA_CACERT} \
       -H "Authorization: Bearer ${SA_TOKEN}" \
       -H "Content-Type: application/json" \
       --data "${json_payload}" \

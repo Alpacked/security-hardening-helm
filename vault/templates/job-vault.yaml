@@ -10,10 +10,31 @@ metadata:
 spec:
   template:
     spec:
-      serviceAccountName: vault-init
+      serviceAccountName: {{ .Values.vault-init.serviceAccount.name | quote }}
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
       - image: "{{ .Values.vault-init.image.repository }}:{{ .Values.vault-init.image.tag }}"
         imagePullPolicy: {{ .Values.vault-init.image.imagePullPolicy }}
-        name: {{ .Chart.Name }}
+        name: {{ .Chart.Name }}-init
+        command: ["sh", "-c", "./vault-init.sh"]
+        env:
+        - name: LEADER_VAULT_ADDRESS
+          value: "http://vault-0.vault-internal.{{ .Release.Namespace }}:8200"
+        - name: LEADER_SECRET_THRESHOLD
+          value: "3"
+        - name: LEADER_SECRET_SHARES
+          value: "5"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
       restartPolicy: OnFailure
   backoffLimit: 5

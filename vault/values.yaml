@@ -5,9 +5,9 @@ vault:
     serviceAccount:
       createSecret: true
     ha:
-      enabled: true
+      enabled: false
       raft:
-        enabled: true
+        enabled: false
 
 vault-init:
   serviceAccount:
@@ -18,12 +18,9 @@ vault-init:
     tag: "0.1.0-rc"
     imagePullPolicy: Always
 
-external-secrets:
-  enabled: true
-  namespace: "external-secrets-system"
-
 eso-init:
-  enabled: true
+  # Use only if external-secrets is already deployed
+  enabled: false
   namespace: "external-secrets-system"
   serviceAccount:
     name: "auth-eso-init"

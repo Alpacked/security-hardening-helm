@@ -3,11 +3,13 @@
 API_SERVER="https://kubernetes.default.svc"
 SA_TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
 SA_NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+SA_CACERT="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)"
 
 get_vault_root_token() {
   echo "Getting Vault root token from \"vault-init-secrets\" for future requests..."
 
-  local secret_manifest=$(curl -s -k -X GET \
+  local secret_manifest=$(curl -s -X GET \
+      --cacert ${SA_CACERT} \
       -H "Authorization: Bearer ${SA_TOKEN}" \
       -H "Accept: application/json" \
       "${API_SERVER}/api/v1/namespaces/${VAULT_NAMESPACE}/secrets/vault-init-secrets")
@@ -49,7 +51,7 @@ write_eso_permissions() {
   curl -X POST \
       --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
       --data '{
-        "bound_service_account_names": "auth-eso-init",
+        "bound_service_account_names": "${ESO_SA}",
         "bound_service_account_namespaces": "${SA_NAMESPACE}",
         "policies": "read-only",
         "ttl": "24h"

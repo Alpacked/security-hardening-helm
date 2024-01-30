@@ -12,10 +12,14 @@ spec:
   template:
     spec:
       serviceAccountName: {{ .Values.eso-init.serviceAccount.name }}
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
       - image: "{{ .Values.eso-init.image.repository }}:{{ .Values.eso-init.image.tag }}"
         imagePullPolicy: {{ .Values.eso-init.image.imagePullPolicy }}
         name: {{ .Chart.Name }}
+        command: ["sh", "-c", "./vault-init-eso.sh"]
         env:
         - name: TEST_SECRET_NAME
           vaule: {{ include "esoTestSecret.name" . }}
@@ -23,6 +27,16 @@ spec:
           value: {{ .Release.Namespace }}
         - name: VAULT_ADDRESS
           value: "http://vault.{{ .Release.Namespace }}:8200"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
       restartPolicy: OnFailure
   backoffLimit: 5
 {{- end }}

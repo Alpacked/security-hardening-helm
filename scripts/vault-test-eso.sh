@@ -2,11 +2,13 @@
 API_SERVER="https://kubernetes.default.svc"
 SA_TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
 SA_NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+SA_CACERT="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)"
 
 get_vault_root_token() {
   echo "Getting Vault root token from \"vault-init-secrets\" for future requests..."
 
-  local secret_manifest=$(curl -s -k -X GET \
+  local secret_manifest=$(curl -s -X GET \
+      --cacert ${SA_CACERT} \
       -H "Authorization: Bearer ${SA_TOKEN}" \
       -H "Accept: application/json" \
       "${API_SERVER}/api/v1/namespaces/${VAULT_NAMESPACE}/secrets/vault-init-secrets")
@@ -35,7 +37,8 @@ destroy_test_secret() {
 get_test_secret_value() {
   echo "Trying to get desired value from k8s secret..."
 
-  local secret_manifest=$(curl -s -k -X GET \
+  local secret_manifest=$(curl -s -X GET \
+      --cacert ${SA_CACERT} \
       -H "Authorization: Bearer ${SA_TOKEN}" \
       -H "Accept: application/json" \
       "${API_SERVER}/api/v1/namespaces/${SA_NAMESPACE}/secrets/${TEST_SECRET_NAME}")

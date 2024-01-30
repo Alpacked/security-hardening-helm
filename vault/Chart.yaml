@@ -1,6 +1,6 @@
 apiVersion: v2
-version: 0.1.0
-appVersion: "1.16.0"
+version: 0.27.0
+appVersion: "1.15.2"
 name: vault
 description: A Vault Helm chart for Kubernetes
 type: application
@@ -8,7 +8,3 @@ dependencies:
   - name: vault
     repository: https://helm.releases.hashicorp.com
     version: 0.27.x
-  - name: external-secrets
-    repository: https://charts.external-secrets.io
-    version: 0.9.x
-    condition: external-secrets.enabled

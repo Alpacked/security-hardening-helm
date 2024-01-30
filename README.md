@@ -1,11 +1,41 @@
-```
-helm install vault --atomic ./vault --dependency-update -f ./vault/values.yaml
+# Helm chart for Vault (and External Secrets) automatic deployment
+
+This chart utilizes Vault helm chart to deploy in multiple modes (stand-alone or HA) with some initial scripts.
+
+We use additional scripts to initialize and unseal Vault pods. It can also add permissions for External Secrets operator that uses KV2 store.
+
+Please note that for External Secrets initialization with Vault the ESO should be already deployed.
+
+
+## Installation
+Basic deploy:
+```bash
+helm repo add alpacked https://<TODO: Helm repository>
+
+helm install vault alpacked/vault -n vault-system --create-namespace --atomic --wait
 ```
 
-```
-k apply -f secretstore.yaml   
+Install with External Secrets Operator:
+```bash
+helm repo add external-secrets https://charts.external-secrets.io
+
+helm install external-secrets external-secrets/external-secrets -n external-secrets-system --create-namespace --wait \
+  --set installCRDs=true
+
+helm install [...] \
+  --set eso-init.enabled=true \
+  --set eso-init.namespace="external-secrets-system" # Set location of ESO in cluster
 ```
 
+Enable vault-injector:
+```bash
+helm install [...] \
+  --set vault.injector.enabled=true
 ```
-k apply -f externalsecret.yaml
+
+Enable HA mode w/ raft mode:
+```bash
+helm install [...] \
+ --set vault.server.ha.enabled=true \
+ --set vault.server.ha.raft.enabled=true
 ```
