@@ -1,0 +1,18 @@
+apiVersion: v1
+entries:
+  vault:
+  - apiVersion: v2
+    appVersion: 1.15.2
+    created: "2024-01-31T15:33:22.213005725Z"
+    dependencies:
+    - name: vault
+      repository: https://helm.releases.hashicorp.com
+      version: 0.27.x
+    description: A Vault Helm chart for Kubernetes
+    digest: e58e48d9a16547d3f97e692766a899cc216ec92aeb5b3d96da71e006835fe1c8
+    name: vault
+    type: application
+    urls:
+    - https://github.com/Alpacked/security-hardening-helm/releases/download/vault-0.27.0/vault-0.27.0.tgz
+    version: 0.27.0
+generated: "2024-01-31T15:33:22.213040089Z"
