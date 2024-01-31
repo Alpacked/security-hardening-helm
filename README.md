@@ -10,9 +10,9 @@ Please note that for External Secrets initialization with Vault the ESO should b
 ## Installation
 Basic deploy:
 ```bash
-helm repo add alpacked https://<TODO: Helm repository>
+helm repo add alpacked-security-hardening https://alpacked.github.io/security-hardening-helm
 
-helm install vault alpacked/vault -n vault-system --create-namespace --atomic --wait
+helm install vault alpacked-security-hardening/vault -n vault-system --create-namespace --atomic --wait
 ```
 
 Install with External Secrets Operator:
@@ -38,4 +38,9 @@ Enable HA mode w/ raft mode:
 helm install [...] \
  --set vault.server.ha.enabled=true \
  --set vault.server.ha.raft.enabled=true
+```
+
+Test the creation of external secret from Vault:
+```bash
+helm test vault
 ```

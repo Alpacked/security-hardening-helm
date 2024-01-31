@@ -1,0 +1,118 @@
+name: Docker Build and Scan Image
+
+on:
+  push:
+    paths:
+    - 'scripts/**'
+    - 'Dockerfile'
+    tags: [ "*" ]
+    branches:
+      - 'master'
+      - 'feature/vault-rework'
+
+env:
+  PLATFORMS: linux/amd64,linux/arm64
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: vault-init
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Docker
+        id: meta
+        uses: ./.github/actions/configure-docker
+        with:
+          image_name: ${{ vars.IMAGE_NAME }}
+          registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry_token: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ vars.CONTEXT }}
+          tags: ${{ steps.meta.outputs.image_tags }}
+          labels: ${{ steps.meta.outputs.image_labels }}
+          platforms: ${{ env.PLATFORMS }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  scan:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: vault-init
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Docker
+        id: meta
+        uses: ./.github/actions/configure-docker
+        with:
+          image_name: ${{ vars.IMAGE_NAME }}
+          registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry_token: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load Docker image
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: ${{ vars.CONTEXT }}
+          tags: ${{ steps.meta.outputs.image_tags }}
+          labels: ${{ steps.meta.outputs.image_labels }}
+          platforms: ${{ env.PLATFORMS }}
+          cache-from: type=gha
+
+      - name: Scan Docker image for vulnerabilities
+        id: scan
+        uses: anchore/scan-action@v3
+        with:
+          fail-build: true
+          severity-cutoff: high
+          output-format: table
+          only-fixed: true
+          image: ${{ steps.meta.outputs.image_tags }}
+
+  push:
+    needs: scan
+    runs-on: ubuntu-latest
+    environment: vault-init
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Docker
+        id: meta
+        uses: ./.github/actions/configure-docker
+        with:
+          image_name: ${{ vars.IMAGE_NAME }}
+          registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry_token: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          context: ${{ vars.CONTEXT }}
+          tags: ${{ steps.meta.outputs.image_tags }}
+          labels: ${{ steps.meta.outputs.image_labels }}
+          platforms: ${{ env.PLATFORMS }}
+          cache-from: type=gha

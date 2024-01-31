@@ -1,0 +1,63 @@
+name: 'Docker Configure'
+description: 'Configures Docker to use containerd image system (beta), gets image metadata and login into container registry'
+
+inputs:
+  image_name:
+    description: Name of image that will be used for build/push
+    required: true
+  registry_address:
+    description: |
+      Address of image registry
+      Default is docker.io
+    default: docker.io
+  registry_username:
+    description: Username for login in image registry. Skips login step if not provided.
+    required: true
+  registry_token:
+    description: Auth token or password fo login in image registry
+    required: true
+
+outputs:
+  image_tags:
+    description: Docker image metadata tags
+    value: ${{ steps.meta.outputs.tags }}
+  image_labels:
+    description: Docker image metadata labels
+    value: ${{ steps.meta.outputs.labels }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Docker
+      uses: crazy-max/ghaction-setup-docker@v2
+      with:
+        daemon-config: |
+          {
+            "features": {
+              "containerd-snapshotter": true
+            }
+          }
+
+    - name: Setup Docker buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        driver-opts: |
+          image=moby/buildkit:master
+
+    - name: Get Docker image metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ inputs.image_name }}
+        labels: |
+          org.opencontainers.image.revision=${{ github.sha }}
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+
+    - name: Log into Docker Hub registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ inputs.registry_address }}
+        username: ${{ inputs.registry_username }}
+        password: ${{ inputs.registry_token }}
