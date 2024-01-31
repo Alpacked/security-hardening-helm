@@ -75,15 +75,19 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           cache-from: type=gha
 
+      - name: Get list of available images
+        run: |
+          docker images
+
       - name: Scan Docker image for vulnerabilities
         id: scan
-        uses: anchore/scan-action@v3
+        uses: aquasecurity/trivy-action@0.16.1
         with:
-          fail-build: true
-          severity-cutoff: high
-          output-format: table
-          only-fixed: true
-          image: ${{ steps.meta.outputs.image_tags }}
+          image-ref: ${{ steps.meta.outputs.image_tags }}
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          format: 'github'
 
   push:
     needs: scan
