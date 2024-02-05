@@ -2,13 +2,8 @@ name: Docker Build and Scan Image
 
 on:
   push:
-    paths:
-    - 'scripts/**'
-    - 'Dockerfile'
-    tags: [ "*" ]
-    branches:
-      - 'master'
-      - 'feature/vault-rework'
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+-*'
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
