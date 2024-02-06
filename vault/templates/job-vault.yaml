@@ -1,22 +1,21 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Chart.Name }}-vault-init
-  namespace: {{ .Values.global.namespace | default .Release.Namespace }}
+  name: {{ .Chart.Name }}-init
   annotations:
     "helm.sh/hook": post-install
-    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-weight": "1"
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded
 spec:
   template:
     spec:
-      serviceAccountName: {{ .Values.vault-init.serviceAccount.name | quote }}
+      serviceAccountName: {{ .Values.vaultInit.serviceAccount.name | quote }}
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
       containers:
-      - image: "{{ .Values.vault-init.image.repository }}:{{ .Values.vault-init.image.tag }}"
-        imagePullPolicy: {{ .Values.vault-init.image.imagePullPolicy }}
+      - image: "{{ .Values.vaultInit.image.repository }}:{{ .Values.vaultInit.image.tag }}"
+        imagePullPolicy: {{ .Values.vaultInit.image.imagePullPolicy }}
         name: {{ .Chart.Name }}-init
         command: ["sh", "-c", "./vault-init.sh"]
         env:

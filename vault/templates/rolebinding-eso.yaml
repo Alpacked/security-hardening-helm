@@ -1,4 +1,4 @@
-{{- if .Values.eso-init.enabled }}
+{{- if .Values.esoInit.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -10,8 +10,8 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.eso-init.serviceAccount.name | quote }}
-    namespace: {{ .Values.eso-init.namespace }}
+    name: {{ .Values.esoInit.serviceAccount.name | quote }}
+    namespace: {{ .Values.esoInit.namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

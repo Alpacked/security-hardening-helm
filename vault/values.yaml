@@ -9,7 +9,7 @@ vault:
       raft:
         enabled: false
 
-vault-init:
+vaultInit:
   serviceAccount:
     name: "auth-vault-init"
 
@@ -18,7 +18,7 @@ vault-init:
     tag: "0.1.0-rc"
     imagePullPolicy: Always
 
-eso-init:
+esoInit:
   # Use only if external-secrets is already deployed
   enabled: false
   namespace: "external-secrets-system"

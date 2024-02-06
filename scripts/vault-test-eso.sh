@@ -2,7 +2,7 @@
 API_SERVER="https://kubernetes.default.svc"
 SA_TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
 SA_NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
-SA_CACERT="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)"
+SA_CACERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
 get_vault_root_token() {
   echo "Getting Vault root token from \"vault-init-secrets\" for future requests..."

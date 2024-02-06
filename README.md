@@ -23,8 +23,8 @@ helm install external-secrets external-secrets/external-secrets -n external-secr
   --set installCRDs=true
 
 helm install [...] \
-  --set eso-init.enabled=true \
-  --set eso-init.namespace="external-secrets-system" # Set location of ESO in cluster
+  --set esoInit.enabled=true \
+  --set esoInit.namespace="external-secrets-system" # Set location of ESO in cluster
 ```
 
 Enable vault-injector:

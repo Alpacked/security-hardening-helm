@@ -1,9 +1,9 @@
-{{- if .Values.eso-init.enabled }}
+{{- if .Values.esoInit.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Chart.Name }}-eso-test-secret
-  namespace: {{ .Values.eso-init.namespace }}
+  namespace: {{ .Values.esoInit.namespace }}
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-weight": "0"
@@ -11,13 +11,13 @@ metadata:
 spec:
   template:
     spec:
-      serviceAccountName: {{ .Values.eso-init.serviceAccount.name }}
+      serviceAccountName: {{ .Values.esoInit.serviceAccount.name }}
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
       containers:
-      - image: "{{ .Values.eso-init.image.repository }}:{{ .Values.eso-init.image.tag }}"
-        imagePullPolicy: {{ .Values.eso-init.image.imagePullPolicy }}
+      - image: "{{ .Values.esoInit.image.repository }}:{{ .Values.esoInit.image.tag }}"
+        imagePullPolicy: {{ .Values.esoInit.image.imagePullPolicy }}
         name: {{ .Chart.Name }}
         command: ["sh", "-c", "./vault-init-eso.sh"]
         env:

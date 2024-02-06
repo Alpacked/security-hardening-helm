@@ -3,7 +3,7 @@
 API_SERVER="https://kubernetes.default.svc"
 SA_TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
 SA_NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
-SA_CACERT="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)"
+SA_CACERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
 get_vault_pod_list() {
   local pod_list=$(curl -s -X GET \
@@ -116,7 +116,8 @@ initialize_raft_vault() {
   fi
 }
 
-echo "Starting process of initialization Vault..."
+echo "Starting process of initialization Vault in 10 seconds..."
+sleep 10 # Waiting to ensure all Vault pods are started.
 
 vault_pod_list=$(get_vault_pod_list)
 for pod in $vault_pod_list; do
