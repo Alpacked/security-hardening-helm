@@ -3,7 +3,7 @@ name: Release Charts
 on:
   push:
     paths:
-      - 'vault/Chart.yaml'
+      - 'vault/**'
     branches:
       - 'master'
       - 'feature/vault-rework'
