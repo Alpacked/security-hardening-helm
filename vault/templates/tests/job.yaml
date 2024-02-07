@@ -22,7 +22,7 @@ spec:
         command: ["sh", "-c", "./vault-test-eso.sh"]
         env:
         - name: TEST_SECRET_NAME
-          vaule: {{ include "esoTestSecret.name" . }}
+          value: {{ include "esoTestSecret.name" . }}
         - name: VAULT_SECRET_NAME
           value: "{{ .Chart.Name }}-init-secrets"
         - name: VAULT_NAMESPACE
