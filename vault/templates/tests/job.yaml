@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Values.esoInit.namespace }}
   annotations:
     "helm.sh/hook": test
-    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-weight": "2"
     "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   template:
@@ -19,10 +19,12 @@ spec:
       - image: "{{ .Values.esoInit.image.repository }}:{{ .Values.esoInit.image.tag }}"
         imagePullPolicy: {{ .Values.esoInit.image.imagePullPolicy }}
         name: {{ .Chart.Name }}
-        command: ["sh", "-c", "./vault-init-eso.sh"]
+        command: ["sh", "-c", "./vault-test-eso.sh"]
         env:
         - name: TEST_SECRET_NAME
           vaule: {{ include "esoTestSecret.name" . }}
+        - name: VAULT_SECRET_NAME
+          value: "{{ .Chart.Name }}-init-secrets"
         - name: VAULT_NAMESPACE
           value: {{ .Release.Namespace }}
         - name: VAULT_ADDRESS

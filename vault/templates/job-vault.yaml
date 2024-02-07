@@ -25,6 +25,8 @@ spec:
           value: "3"
         - name: LEADER_SECRET_SHARES
           value: "5"
+        - name: SECRET_NAME
+          value: "{{ .Chart.Name }}-init-secrets"
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

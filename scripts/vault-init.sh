@@ -28,12 +28,13 @@ save_secrets() {
   local json_payload=$(jq -n \
     --argjson unsealTokens "${unseal_tokens}" \
     --arg rootToken "$(echo -n "${LEADER_RESPONSE}" | jq -rj ".root_token" | base64 -w 0)" \
+    --arg secretName "${SECRET_NAME}" \
     --arg namespace "${SA_NAMESPACE}" \
     '{
         "apiVersion": "v1",
         "kind": "Secret",
         "metadata": {
-          "name": "vault-init-secrets",
+          "name": $secretName,
           "namespace": $namespace
         },
         "type": "Opaque",

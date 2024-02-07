@@ -50,12 +50,12 @@ write_eso_permissions() {
 
   curl -X POST \
       --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}" \
-      --data '{
-        "bound_service_account_names": "${ESO_SA}",
-        "bound_service_account_namespaces": "${SA_NAMESPACE}",
-        "policies": "read-only",
-        "ttl": "24h"
-      }' \
+      --data "{
+        \"bound_service_account_names\": \"${ESO_SA}\",
+        \"bound_service_account_namespaces\": \"${SA_NAMESPACE}\",
+        \"policies\": \"read-only\",
+        \"ttl\": \"24h\"
+      }" \
       "${VAULT_ADDRESS}/v1/auth/kubernetes/role/eso-reader"
 }
 

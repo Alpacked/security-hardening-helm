@@ -4,7 +4,9 @@ This chart utilizes Vault helm chart to deploy in multiple modes (stand-alone or
 
 We use additional scripts to initialize and unseal Vault pods. It can also add permissions for External Secrets operator that uses KV2 store.
 
-Please note that for External Secrets initialization with Vault the ESO should be already deployed.
+As result of executing this chart you should have created 'vault-init-secrets' with corresponding values that used for initialization. Note that this secret isn't going deleted or re-written after deleting release, so you must manually ensure it's rotation and safety.
+
+Please note that for External Secrets initialization with Vault the ESO should be already deployed. Helm test command will create temporary secret to test connection between ESO and Vault.
 
 
 ## Installation
@@ -42,5 +44,5 @@ helm install [...] \
 
 Test the creation of external secret from Vault:
 ```bash
-helm test vault
+helm test vault -n vault-system
 ```
