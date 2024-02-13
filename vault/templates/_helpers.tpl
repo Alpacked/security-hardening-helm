@@ -31,6 +31,17 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Define list based on enabled features.
+*/}}
+{{- define "vault.featureList" }}
+{{- $featureList := list "init" }}
+{{- if .Values.esoInit.enabled }}
+  {{- $featureList = append $featureList "eso-init" }}
+{{- end -}}
+{{- toJson $featureList }}
+{{- end -}}
+
+{{/*
 Common labels
 */}}
 {{- define "vault.labels" -}}

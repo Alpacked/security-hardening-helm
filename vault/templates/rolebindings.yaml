@@ -1,0 +1,29 @@
+{{- $rbList := include "vault.featureList" . | fromJsonArray }}
+{{- range $rbName := $rbList }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "vault.name" $ }}-{{ $rbName }}-permissions
+  annotations:
+    {{- if eq $rbName "init" }}
+    "helm.sh/hook": post-install
+    {{- else if eq $rbName "eso-init" }}
+    "helm.sh/hook": post-install, post-upgrade
+    {{- end }}
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded
+subjects:
+  - kind: ServiceAccount
+    {{- if eq $rbName "init" }}
+    name: "auth-vault-init"
+    namespace: {{ $.Release.Namespace }}
+    {{- else if eq $rbName "eso-init" }}
+    name: {{ $.Values.esoInit.serviceAccount.name | quote }}
+    namespace: {{ $.Values.esoInit.namespace | quote }}
+    {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "vault.name" $ }}-{{ $rbName }}-permissions
+{{- end }}

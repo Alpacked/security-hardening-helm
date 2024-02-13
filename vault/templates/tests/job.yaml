@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Chart.Name }}-eso-test-secret
+  name: {{ include "vault.name" . }}-eso-test-secret
   namespace: {{ .Values.esoInit.namespace }}
   annotations:
     "helm.sh/hook": test
@@ -16,15 +16,15 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
       containers:
-      - image: "{{ .Values.esoInit.image.repository }}:{{ .Values.esoInit.image.tag }}"
-        imagePullPolicy: {{ .Values.esoInit.image.imagePullPolicy }}
-        name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+        name: {{ include "vault.name" . }}
         command: ["sh", "-c", "./vault-test-eso.sh"]
         env:
         - name: TEST_SECRET_NAME
           value: {{ include "esoTestSecret.name" . }}
         - name: VAULT_SECRET_NAME
-          value: "{{ .Chart.Name }}-init-secrets"
+          value: "{{ include "vault.name" . }}-init-secrets"
         - name: VAULT_NAMESPACE
           value: {{ .Release.Namespace }}
         - name: VAULT_ADDRESS

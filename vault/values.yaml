@@ -9,14 +9,10 @@ vault:
       raft:
         enabled: false
 
-vaultInit:
-  serviceAccount:
-    name: "auth-vault-init"
-
-  image:
-    repository: "alpacked/vault-init-scripts"
-    tag: "0.1.0-rc"
-    imagePullPolicy: Always
+image:
+  repository: "alpacked/vault-init-scripts"
+  tag: "0.1.1-rc"
+  imagePullPolicy: Always
 
 esoInit:
   # Use only if external-secrets is already deployed
@@ -24,8 +20,3 @@ esoInit:
   namespace: "external-secrets-system"
   serviceAccount:
     name: "auth-eso-init"
-
-  image:
-    repository: "alpacked/vault-init-scripts"
-    tag: "0.1.0-rc"
-    imagePullPolicy: Always
