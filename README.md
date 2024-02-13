@@ -1,12 +1,23 @@
-# Helm chart for Vault (and External Secrets) automatic deployment
+# Helm Chart for Vault (and External Secrets) Automatic Deployment
 
-This chart utilizes Vault helm chart to deploy in multiple modes (stand-alone or HA) with some initial scripts.
+This chart leverages the Vault Helm chart for deployment in various modes (stand-alone or high availability (HA)) and includes initial scripts for setup.
 
-We use additional scripts to initialize and unseal Vault pods. It can also add permissions for External Secrets operator that uses KV2 store.
+We use additional scripts (jobs) to initialize and unseal Vault pods. These scripts also configure permissions for the External Secrets Operator, which utilizes the KV2 store:
 
-As result of executing this chart you should have created 'vault-init-secrets' with corresponding values that used for initialization. Note that this secret isn't going deleted or re-written after deleting release, so you must manually ensure it's rotation and safety.
+- **vault-init.sh**:
+This script checks the status of ready Vault pods and performs the unseal process. The `vault-0` pod is designated as the leader, with the remaining pods serving as followers in HA raft mode (if enabled).
 
-Please note that for External Secrets initialization with Vault the ESO should be already deployed. Helm test command will create temporary secret to test connection between ESO and Vault.
+- **vault-init-eso.sh**:
+Executed after `vault-init.sh`, this script enables the `kubernetes` authentication method in Vault, initiates the KV2 secret engine, and adds a read-only policy and role for the ESO service account.
+It is important to note that the External Secrets Operator should already be deployed before initializing it with Vault.
+
+- **vault-test-eso.sh**:
+Utilized during the 'helm test' run, this script creates a temporary value in Vault to verify the correct configuration.
+The ClusterSecretStore and ExternalSecrets should fetch this value to create a temporary Kubernetes secret.
+
+Jobs and the majority of RBAC manifests are managed as Helm hooks, meaning they will be deleted post-execution.
+Only the secret containing Vault initialization tokens (vault-init-secrets) and the service account for ESO will remain for future use.
+Please be aware that this secret will not be automatically deleted or rewritten upon release removal; manual rotation and security measures must be enforced.
 
 
 ## Installation
