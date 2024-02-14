@@ -72,8 +72,6 @@ jobs:
         uses: aquasecurity/trivy-action@0.16.1
         with:
           input: /github/workspace/vault-init-image
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
           format: 'sarif'
           output: 'trivy-results.sarif'
 
