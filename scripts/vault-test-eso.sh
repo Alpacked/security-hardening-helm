@@ -10,7 +10,7 @@ get_secret_from_k8s() {
     --cacert "${SA_CACERT}" \
     -H "Authorization: Bearer ${SA_TOKEN}" \
     -H "Accept: application/json" \
-    "${API_SERVER}/api/v1/namespaces/${VAULT_NAMESPACE}/secrets/${1}"
+    "${API_SERVER}/api/v1/namespaces/${2}/secrets/${1}"
 }
 
 create_test_secret() {
@@ -27,18 +27,20 @@ destroy_test_secret() {
 }
 
 echo "Getting Vault root token from \"${VAULT_SECRET_NAME}\" for future requests..."
-VAULT_ROOT_TOKEN=$(${get_secret_from_k8s $VAULT_SECRET_NAME} | jq -r '.data.root_token' | base64 -d)
+VAULT_ROOT_TOKEN=$(get_secret_from_k8s $VAULT_SECRET_NAME $VAULT_NAMESPACE | jq -r '.data.root_token' | base64 -d)
 
 echo "Creating test secret..."
 create_test_secret
 
 for i in $(seq 1 10); do
     echo "Trying to get desired value from k8s secret..."
-    secret_value=$(${get_secret_from_k8s $TEST_SECRET_NAME} | awk -F'"' '/"test-user":/{print $(NF-1)}' | base64 -d)
+    secret_value=$(get_secret_from_k8s $TEST_SECRET_NAME $SA_NAMESPACE | awk -F'"' '/"test-user":/{print $(NF-1)}' | base64 -d)
 
     if [ "$secret_value" == "success" ]; then
-        echo "Success on attempt №$i."
+        echo "Success on attempt №$i. Removing test secret from Vault..."
         destroy_test_secret
+        echo "Done."
+
         exit 0
     else
         echo "Attempt №$i failed. Retrying in 10 seconds..."
@@ -46,7 +48,8 @@ for i in $(seq 1 10); do
     sleep 10
 done
 
-echo "Delete test secret from Vault..."
+echo "Attempt limit reached. Removing test secret from Vault..."
 destroy_test_secret
+echo "Done."
 
 exit 1
