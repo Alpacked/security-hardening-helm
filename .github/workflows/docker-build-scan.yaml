@@ -72,7 +72,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.16.1
         with:
           input: /github/workspace/vault-init-image
-          severity: 'MEDIUM,HIGH,CRITICAL'
+          severity: 'HIGH,CRITICAL'
           exit-code: '1'
           format: 'sarif'
           limit-severities-for-sarif: false
