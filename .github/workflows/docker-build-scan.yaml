@@ -2,8 +2,8 @@ name: Docker Build and Scan Image
 
 on:
   push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+-*'
+    branches:
+      - 'test/gha-sarif-upload-single-workflow'
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
@@ -72,16 +72,20 @@ jobs:
         uses: aquasecurity/trivy-action@0.16.1
         with:
           input: /github/workspace/vault-init-image
+          severity: 'MEDIUM,HIGH,CRITICAL'
+          exit-code: '1'
           format: 'sarif'
+          limit-severities-for-sarif: false
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results to GitHub Security tab
+        if: success() || failure()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
 
   push:
-    needs: scan
+    needs: [build, scan]
     runs-on: ubuntu-latest
     environment: vault-init
     permissions:
