@@ -1,0 +1,70 @@
+{{- $jobsList := include "vault.featureList" . | fromJsonArray }}
+{{- range $jobName := $jobsList }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "vault.name" $ }}-{{ $jobName }}
+  {{- if eq $jobName "eso-init" }}
+  namespace: {{ $.Values.esoInit.namespace }}
+  {{- end }}
+  annotations:
+    {{- if eq $jobName "init" }}
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+    {{- else if eq $jobName "eso-init" }}
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-weight": "2"
+    {{- end }}
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded
+spec:
+  template:
+    spec:
+      {{- if eq $jobName "init" }}
+      serviceAccountName: "auth-vault-init"
+      {{- else if eq $jobName "eso-init" }}
+      serviceAccountName: {{ $.Values.esoInit.serviceAccount.name | quote }}
+      {{- end }}
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+      - name: {{ include "vault.name" $ }}-{{ $jobName }}
+        image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag }}"
+        imagePullPolicy: {{ $.Values.image.imagePullPolicy }}
+        {{- if eq $jobName "init" }}
+        command: ["sh", "-c", "./vault-init.sh"]
+        {{- else if eq $jobName "eso-init" }}
+        command: ["sh", "-c", "./vault-init-eso.sh"]
+        {{- end }}
+        env:
+        {{- if eq $jobName "init" }}
+        - name: LEADER_VAULT_ADDRESS
+          value: "http://vault-0.vault-internal.{{ $.Release.Namespace }}:8200"
+        - name: LEADER_SECRET_THRESHOLD
+          value: "3"
+        - name: LEADER_SECRET_SHARES
+          value: "5"
+        - name: SECRET_NAME
+          value: "{{ include "vault.name" $ }}-init-secrets"
+        {{- else if eq $jobName "eso-init" }}
+        - name: VAULT_NAMESPACE
+          value: {{ $.Release.Namespace }}
+        - name: VAULT_ADDRESS
+          value: "http://vault.{{ $.Release.Namespace }}:8200"
+        - name: ESO_SA
+          value: {{ $.Values.esoInit.serviceAccount.name | quote }}
+        {{- end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+      restartPolicy: OnFailure
+  backoffLimit: 5
+{{- end }}

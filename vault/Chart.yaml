@@ -1,0 +1,10 @@
+apiVersion: v2
+version: 0.27.1
+appVersion: "1.15.2"
+name: vault
+description: A Vault Helm chart for Kubernetes
+type: application
+dependencies:
+  - name: vault
+    repository: https://helm.releases.hashicorp.com
+    version: 0.27.x

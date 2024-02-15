@@ -1,0 +1,118 @@
+name: Docker Build and Scan Image
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+-*'
+
+env:
+  PLATFORMS: linux/amd64,linux/arm64
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: vault-init
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Docker
+        id: meta
+        uses: ./.github/actions/configure-docker
+        with:
+          image_name: ${{ vars.IMAGE_NAME }}
+          registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry_token: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ vars.CONTEXT }}
+          tags: ${{ steps.meta.outputs.image_tags }}
+          labels: ${{ steps.meta.outputs.image_labels }}
+          platforms: ${{ env.PLATFORMS }}
+          outputs: type=oci,dest=vault-init-image.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vault-init-image
+          path: vault-init-image.tar
+
+  scan:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: vault-init
+    permissions:
+      contents: write
+      actions: read
+      security-events: write
+
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vault-init-image
+          path: .
+
+      - name: Unarchive tarball
+        run: |
+          mkdir vault-init-image
+          tar -xvf vault-init-image.tar -C vault-init-image
+
+      - name: Scan Docker image for vulnerabilities
+        id: scan
+        uses: aquasecurity/trivy-action@0.17.0
+        with:
+          input: /github/workspace/vault-init-image
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+          format: 'sarif'
+          limit-severities-for-sarif: true
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: success() || failure()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  push:
+    needs: [build, scan]
+    runs-on: ubuntu-latest
+    environment: vault-init
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vault-init-image
+          path: .
+
+      - name: Configure Docker
+        id: meta
+        uses: ./.github/actions/configure-docker
+        with:
+          image_name: ${{ vars.IMAGE_NAME }}
+          registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry_token: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load Docker image
+        run: docker image load --input ./vault-init-image.tar
+
+      - name: Push Docker image
+        run: docker push ${{ vars.IMAGE_NAME }} --all-tags
