@@ -69,13 +69,13 @@ jobs:
 
       - name: Scan Docker image for vulnerabilities
         id: scan
-        uses: aquasecurity/trivy-action@0.16.1
+        uses: aquasecurity/trivy-action@0.13.1
         with:
           input: /github/workspace/vault-init-image
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
           format: 'sarif'
-          limit-severities-for-sarif: true
+          limit-severities-for-sarif: false
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results to GitHub Security tab
