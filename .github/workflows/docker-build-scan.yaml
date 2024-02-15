@@ -69,7 +69,7 @@ jobs:
 
       - name: Scan Docker image for vulnerabilities
         id: scan
-        uses: aquasecurity/trivy-action@0.13.1
+        uses: aquasecurity/trivy-action@0.14.0
         with:
           input: /github/workspace/vault-init-image
           severity: 'HIGH,CRITICAL'
