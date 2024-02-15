@@ -74,7 +74,7 @@ jobs:
           input: /github/workspace/vault-init-image
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           exit-code: '1'
-          format: 'sarif'
+          format: 'table,sarif'
           limit-severities-for-sarif: false
           output: 'trivy-results.sarif'
 
